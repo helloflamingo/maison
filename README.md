@@ -20,3 +20,7 @@ If the site still says messaging needs setup, hard refresh or reload after the G
 
 ## Privacy
 GitHub Pages site and its source files are public, including any photos in the repo. Firestore notes remain private only if the restrictive rules stay published. Any authorized family member with access to the site can read all notes.
+
+
+## v0.8 family names
+The approved Firebase UIDs now display as Vanessa, Stephen, and Lola in Family Notes, including existing messages. No Firestore rule changes are needed.

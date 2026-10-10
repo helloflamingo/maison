@@ -2,8 +2,8 @@ import { firebaseConfig } from './firebase-config.js';
 const $ = id => document.getElementById(id);
 const status = message => { $('note-status').textContent = message; };
 const names = {
-  'WWMcGIWcq1TzWfwGG9WnNzxmIRD2': 'Family',
-  'WfLNxDUylshGhYv9YBOlfCBV5Jm2': 'Family',
+  'WWMcGIWcq1TzWfwGG9WnNzxmIRD2': 'Vanessa',
+  'WfLNxDUylshGhYv9YBOlfCBV5Jm2': 'Stephen',
   'IzJcjBWFdRSLHrDoswBP09fdwoj1': 'Lola'
 };
 const allowed = new Set(Object.keys(names));
