@@ -1,4 +1,4 @@
-# Maison v0.6 — Live Family Notes
+# Maison v0.7 — Rotating Family Notes
 
 GitHub Pages deployment: upload **all files** in this folder to the root of `helloflamingo/maison`, overwriting existing files of the same names. Especially ensure `firebase-config.js`, `family-notes.js`, and `index.html` are uploaded. Do not upload a ZIP as a single file.
 
@@ -11,7 +11,7 @@ The Firebase web app configuration is already included. These are public Firebas
 - No need to manually create a `familyNotes` collection; first message creates it.
 
 ## Using it
-Open the published Maison URL, tap Sign in, use the email and password set up in Firebase Authentication. Post a note; it should appear on the dashboard of any other signed-in family device. Only two newest messages show on the dashboard.
+Open the published Maison URL, tap Sign in, use the email and password set up in Firebase Authentication. Post a note; it should appear on the dashboard of any other signed-in family device. The five most recent messages rotate two at a time every 15 seconds. Rotation pauses while writing, hovering over the notes, or when the page is hidden. New messages appear immediately.
 
 **Name labels:** `family-notes.js` has a `names` mapping for the three approved UIDs. Lola is already labelled; the other two are currently labelled `Family` until you specify their preferred display names. Edit the names in that file and re-upload to GitHub to personalize them.
 
