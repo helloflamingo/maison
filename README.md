@@ -1,23 +1,19 @@
-# Maison v0.4 — Always-On Edition
+# Maison v0.5 — Family Notes
 
-A personal, landscape-oriented family dashboard. Includes Stockholm weather and air quality, Ingarö and Lund weather, Rambo’s Corner with the supplied family photo, French radio, and three news headlines.
+Replaces headlines with a compact, shared Family Notes panel. Shows the two latest notes, with a short composer. Weather, French radio, Lola in Lund, Ingarö and Rambo remain.
 
-## Publish with GitHub Pages
-1. Create a new GitHub repository (public repository is easiest for free GitHub Pages; avoid committing private data).
-2. Upload all files in this folder to the repository root.
-3. In Settings → Pages choose **Deploy from a branch**, `main`, `/ (root)` and Save.
-4. Wait for the HTTPS Pages URL to become available. Open that URL on the iPad in Safari.
-5. Share → Add to Home Screen → Add.
+## Publish
+Upload the contents of this folder to your existing `helloflamingo/maison` GitHub repository, **replacing** `index.html` and adding `family-notes.js`, `firebase-config.js` and `firestore.rules`. GitHub Pages republishes automatically.
 
-The app can be opened locally for a preview, but the Home Screen install, manifest and service worker work best from HTTPS hosting.
+## Important: Firebase setup is required before messages work
+GitHub Pages cannot store shared messages by itself. Until configured, the panel will clearly say `Not connected yet`. No fake messages are shown.
 
-## Always-on
-Set iPad Settings → Display & Brightness → Auto-Lock → Never (if available). Guided Access can keep Maison on screen. Plug in safely and keep ventilation clear. The in-app night palette begins at 22:00 and ends at 07:00 Stockholm time; it does not control the iPad hardware brightness.
+1. At https://console.firebase.google.com create a Firebase project and add a **Web app**. Copy the app's configuration values into `firebase-config.js`.
+2. In Firebase **Authentication → Sign-in method**, enable **Email/Password**. In **Authentication → Users**, create accounts for each family member using their own email addresses and passwords. Never put passwords into GitHub.
+3. In **Firestore Database**, create a database. Before sharing the site, open **Rules**, paste the contents of `firestore.rules`, and replace the two placeholder email addresses with the exact account emails. Publish the rules. **Do not use open/test-mode rules on this public site.**
+4. In Authentication → Settings → Authorized domains, ensure `helloflamingo.github.io` is authorized if needed for your sign-in setup.
+5. In GitHub, upload the edited `firebase-config.js` and the other v0.5 files. Open Maison, tap Sign in, and enter your account details. Lola signs in separately from Lund. The latest two notes sync in real time.
 
-## Notes
-- Weather and air quality: Open-Meteo. Live internet connection required.
-- News: BBC UK, The Local Sweden, BBC World, via third-party AllOrigins CORS reader. Feeds may fail or be unavailable. World source is BBC, not Reuters.
-- Radio: community Radio Browser directory, so individual streams may not always play in Safari. Tap play to start.
-- Weather locations use approximate area centres, not precise home addresses.
-- Service worker caches the interface for offline display, not live data.
-- iPad browser may suspend JavaScript in the background; updates resume when app becomes visible.
+**Note:** This example uses email/password sign-in. Some Firebase projects may not set `email_verified` to true automatically for manually created users. If you use console-created accounts, verify the users' emails through Firebase's supported verification flow before expecting Firestore access. Do not weaken the rules to bypass family-only access.
+
+The repository is public, but the notes are not readable without an authorized Firebase account **when these rules are correctly published**. Web Firebase config is not a secret. Keep all passwords private.
