@@ -1,26 +1,18 @@
-# Maison v0.7 — Rotating Family Notes
+# Maison v0.9 — Maison Mystère
 
-GitHub Pages deployment: upload **all files** in this folder to the root of `helloflamingo/maison`, overwriting existing files of the same names. Especially ensure `firebase-config.js`, `family-notes.js`, and `index.html` are uploaded. Do not upload a ZIP as a single file.
+This release adds a daily shared family riddle under Rambo’s Corner. Stephen, Vanessa and Lola each enter their answer; successful solves are displayed in chronological order across devices. All previous features are retained.
 
-The Firebase web app configuration is already included. These are public Firebase app identifiers, not account credentials. Never upload passwords or Firebase service account credentials.
+## Installation
 
-## Firebase prerequisites
-- Firebase Authentication Email/Password enabled; family users created.
-- Firestore `(default)` database created.
-- Firestore rules published allowing only the three approved UIDs to read `familyNotes`, and create `{uid,text,createdAt}` messages with server timestamps. No other fields; updates/deletes blocked.
-- No need to manually create a `familyNotes` collection; first message creates it.
+1. Upload **all files** in this package to the root of the existing GitHub repository, replacing files of the same names. Keep `firebase-config.js` (it contains the existing public Firebase project configuration).
+2. **IMPORTANT:** In Firebase Console → Firestore Database → Rules, replace the current rules with the content of `firestore.rules` and click **Publish**. These rules preserve Family Notes and add the new `riddleSolves` collection. If your existing rules include other custom permissions, merge rather than blindly replace.
+3. Refresh Maison after GitHub Pages finishes publishing. iPad home-screen users may need to close and reopen the app to pick up the updated service worker.
 
-## Using it
-Open the published Maison URL, tap Sign in, use the email and password set up in Firebase Authentication. Post a note; it should appear on the dashboard of any other signed-in family device. The five most recent messages rotate two at a time every 15 seconds. Rotation pauses while writing, hovering over the notes, or when the page is hidden. New messages appear immediately.
+## How it works
 
-**Name labels:** `family-notes.js` has a `names` mapping for the three approved UIDs. Lola is already labelled; the other two are currently labelled `Family` until you specify their preferred display names. Edit the names in that file and re-upload to GitHub to personalize them.
-
-## Troubleshooting
-If the site still says messaging needs setup, hard refresh or reload after the GitHub Pages deployment completes. If sign-in fails, check the account credentials and Firebase Authentication settings. If signed in but no notes appear, check Firestore Rules match the published schema. The page uses Firebase CDN ES modules and needs an internet connection.
-
-## Privacy
-GitHub Pages site and its source files are public, including any photos in the repo. Firestore notes remain private only if the restrictive rules stay published. Any authorized family member with access to the site can read all notes.
-
-
-## v0.8 family names
-The approved Firebase UIDs now display as Vanessa, Stephen, and Lola in Family Notes, including existing messages. No Firestore rule changes are needed.
+- The riddle changes at **midnight Stockholm time**, with a curated bank of 60 riddles (repeats after 60 days).
+- The same riddle is displayed to all devices. A correct guess saves one document per family member per day to Firestore.
+- Names are ordered by Firestore creation timestamp; ties use UID as a deterministic fallback.
+- Incorrect guesses stay private; only successful solves are stored.
+- The riddle answer is checked in browser JavaScript, so this is a **friendly family game, not a cheat-proof competition**.
+- If you deploy the website before publishing the new rules, the puzzle will display but scores cannot be saved.

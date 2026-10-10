@@ -1,4 +1,5 @@
 import { firebaseConfig } from './firebase-config.js';
+import { RIDDLES } from './riddles.js';
 const $ = id => document.getElementById(id);
 const status = message => { $('note-status').textContent = message; };
 const names = {
@@ -53,6 +54,9 @@ async function main() {
   const auth = authLib.getAuth(app);
   const db = dbLib.getFirestore(app);
   let unsubscribe = () => {};
+  let unsubscribeRiddle = () => {};
+  let puzzleDay = "";
+  let solvedBy = new Set();
   let user = null;
   loginButton.addEventListener('click', () => {
     document.getElementById('maison-login').showModal();
@@ -71,10 +75,66 @@ async function main() {
     } catch (_) { error.textContent = 'Unable to sign in. Please check your email and password.'; }
   });
   logoutButton.addEventListener('click', () => authLib.signOut(auth));
+  const riddleInput = $('mystere-input');
+  const riddleButton = $('mystere-submit');
+  const riddleFeedback = $('mystere-feedback');
+  const dateKey = () => new Intl.DateTimeFormat('en-CA', {timeZone:'Europe/Stockholm',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const puzzleFor = day => {
+    // Date-only stable selection, identical on every family device.
+    const ordinal = Math.floor(Date.parse(day+'T12:00:00Z') / 86400000);
+    return RIDDLES[((ordinal % RIDDLES.length) + RIDDLES.length) % RIDDLES.length];
+  };
+  const normalized = s => s.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('en').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim().replace(/^(a|an|the) /,'');
+  function watchRiddle() {
+    const today = dateKey();
+    if (today === puzzleDay) return;
+    unsubscribeRiddle(); unsubscribeRiddle = () => {};
+    puzzleDay = today; solvedBy = new Set();
+    riddleInput.value = '';
+    $('mystere-question').textContent = puzzleFor(today).q;
+    $('mystere-winners').textContent = 'No one yet — be first!';
+    riddleFeedback.textContent = user ? 'Good luck! One riddle for all three of you.' : 'Sign in to play with the family.';
+    riddleInput.disabled = !user; riddleButton.disabled = !user;
+    if (!user) return;
+    const q = dbLib.query(dbLib.collection(db, 'riddleSolves'), dbLib.where('day','==',today));
+    unsubscribeRiddle = dbLib.onSnapshot(q, snapshot => {
+      const entries = snapshot.docs.map(doc => doc.data()).sort((a,b) => {
+        const ta=a.createdAt?.toMillis?.() ?? Infinity, tb=b.createdAt?.toMillis?.() ?? Infinity;
+        return ta-tb || a.uid.localeCompare(b.uid);
+      });
+      solvedBy = new Set(entries.map(e=>e.uid));
+      $('mystere-winners').textContent = entries.length ? entries.map(e=>names[e.uid] || 'Family').join(', ') : 'No one yet — be first!';
+      const done = solvedBy.has(user.uid);
+      riddleInput.disabled = done; riddleButton.disabled = done;
+      if (done) riddleFeedback.textContent = '✓ You solved today’s riddle!';
+    }, err => {riddleFeedback.textContent='Unable to load riddle results. Check Firestore rules.';console.error(err);});
+  }
+  $('mystere-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!user || solvedBy.has(user.uid)) return;
+    const today = dateKey();
+    if (today !== puzzleDay) {watchRiddle();return;}
+    const guess = normalized(riddleInput.value);
+    if (!guess) return;
+    const right = puzzleFor(today).answers.some(a=>normalized(a)===guess);
+    if (!right) {riddleFeedback.textContent='Not quite! Have another guess. 🧩';return;}
+    riddleButton.disabled = true;
+    try {
+      await dbLib.setDoc(dbLib.doc(db, 'riddleSolves', today+'_'+user.uid), {
+        uid:user.uid,day:today,createdAt:dbLib.serverTimestamp()
+      });
+      riddleFeedback.textContent='✓ Correct! Your name is on the board.';
+      riddleInput.value='';riddleInput.disabled=true;
+    } catch (err) {riddleFeedback.textContent='Could not save your answer. Check Firebase rules.';riddleButton.disabled=false;console.error(err);}
+  });
+  setInterval(watchRiddle, 60000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)watchRiddle();});
   authLib.onAuthStateChanged(auth, current => {
     unsubscribe(); unsubscribe = () => {};
+    unsubscribeRiddle(); unsubscribeRiddle = () => {}; puzzleDay = "";
     stopRotation(); recentNotes = []; pageIndex = 0; lastNoteKey = ''; list.classList.remove('notes-fading');
     user = current && allowed.has(current.uid) ? current : null;
+    watchRiddle();
     loginButton.hidden = !!current;
     logoutButton.hidden = !current;
     input.disabled = !user;

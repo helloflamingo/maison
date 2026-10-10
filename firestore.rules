@@ -1,23 +1,34 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function familyMember() {
-      return request.auth != null && request.auth.token.email_verified == true
-        && request.auth.token.email in [
-          'REPLACE_WITH_YOUR_EMAIL@example.com',
-          'REPLACE_WITH_LOLAS_EMAIL@example.com'
-        ];
+    function isFamily() {
+      return request.auth != null && request.auth.uid in [
+        'WWMcGIWcq1TzWfwGG9WnNzxmIRD2',
+        'WfLNxDUylshGhYv9YBOlfCBV5Jm2',
+        'IzJcjBWFdRSLHrDoswBP09fdwoj1'
+      ];
     }
     match /familyNotes/{noteId} {
-      allow read: if familyMember();
-      allow create: if familyMember()
-        && request.resource.data.keys().hasOnly(['text','author','authorUid','createdAt'])
+      allow read: if isFamily();
+      allow create: if isFamily()
+        && request.resource.data.keys().hasOnly(['uid','text','createdAt'])
+        && request.resource.data.keys().hasAll(['uid','text','createdAt'])
+        && request.resource.data.uid == request.auth.uid
         && request.resource.data.text is string
         && request.resource.data.text.size() > 0
-        && request.resource.data.text.size() <= 280
-        && request.resource.data.author is string
-        && request.resource.data.author.size() <= 100
-        && request.resource.data.authorUid == request.auth.uid
+        && request.resource.data.text.size() <= 500
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+    match /riddleSolves/{solveId} {
+      allow read: if isFamily();
+      allow create: if isFamily()
+        && solveId == request.resource.data.day + '_' + request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid','day','createdAt'])
+        && request.resource.data.keys().hasAll(['uid','day','createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.day is string
+        && request.resource.data.day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && request.resource.data.createdAt == request.time;
       allow update, delete: if false;
     }
